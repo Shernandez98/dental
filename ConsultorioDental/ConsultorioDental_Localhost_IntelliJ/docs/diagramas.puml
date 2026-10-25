@@ -1,0 +1,62 @@
+@startuml Casos_de_uso
+left to right direction
+actor "Personal administrativo" as Admin
+actor Dentista
+rectangle "DentalCare" {
+ usecase "Administrar pacientes" as UC1
+ usecase "Programar / cancelar citas" as UC2
+ usecase "Administrar tratamientos" as UC3
+ usecase "Registrar tratamiento realizado" as UC4
+ usecase "Emitir comprobante" as UC5
+ usecase "Registrar pago parcial" as UC6
+}
+Admin --> UC1
+Admin --> UC2
+Admin --> UC3
+Admin --> UC5
+Admin --> UC6
+Dentista --> UC2
+Dentista --> UC4
+@enduml
+@startuml Clases
+class Paciente { +id: String\n+nombre: String\n+apellidos: String\n+telefono: String }
+class Cita { +id: String\n+fecha: Date\n+hora: Time\n+estado: String }
+class Tratamiento { +id: String\n+nombre: String\n+precio: Decimal }
+class TratamientoRealizado { +id: String\n+fecha: Date\n+detalle: String }
+class Factura { +id: String\n+fecha: Date\n+total: Decimal }
+class DetalleFactura { +cantidad: int\n+precio: Decimal }
+class Pago { +id: String\n+monto: Decimal\n+metodo: String }
+Paciente "1" -- "*" Cita
+Tratamiento "1" -- "*" Cita
+Paciente "1" -- "*" TratamientoRealizado
+Tratamiento "1" -- "*" TratamientoRealizado
+Paciente "1" -- "*" Factura
+Factura "1" -- "*" DetalleFactura
+DetalleFactura "*" -- "1" Tratamiento
+Factura "1" -- "*" Pago
+@enduml
+@startuml Actividad_Cita
+start
+:Elegir paciente;
+:Elegir tratamiento, fecha y hora;
+if (¿Horario ocupado?) then (Sí)
+ :Mostrar advertencia;
+else (No)
+ :Guardar cita;
+ :Mostrar cita en agenda;
+endif
+stop
+@enduml
+@startuml Secuencia_Pago
+actor Administrador
+participant "Interfaz web" as Web
+database "Almacenamiento local" as DB
+Administrador -> Web: Selecciona factura
+Web -> DB: Consulta total y pagos
+DB --> Web: Total, saldo
+Administrador -> Web: Introduce abono
+Web -> Web: Valida monto <= saldo
+Web -> DB: Guarda pago
+DB --> Web: Confirmación
+Web --> Administrador: Saldo actualizado
+@enduml
